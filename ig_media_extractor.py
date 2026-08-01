@@ -52,7 +52,7 @@ CONFIG_FILE = "config.json"
 
 def get_default_downloads_folder():
     if "com.termux" in os.environ.get("PREFIX", ""):
-        return os.path.join(os.path.expanduser("~"), "storage", "downloads", "ig_media")
+        return "/storage/emulated/0/Download/ig_media"
     elif platform.system() == "Windows":
         return os.path.join(os.environ.get("USERPROFILE", os.path.expanduser("~")), "Downloads", "ig_media")
     else:
@@ -109,6 +109,24 @@ def reorganize_downloads(target_dir, date_folder_name):
                 
             os.makedirs(dest_dir, exist_ok=True)
             shutil.move(file_path, os.path.join(dest_dir, file))
+
+def open_folder(path):
+    os.makedirs(path, exist_ok=True)
+    if "com.termux" in os.environ.get("PREFIX", ""):
+        print(f"\n[Termux] Downloads are located at: {path}")
+        print("Please use your Android file manager to view them.")
+        return
+        
+    try:
+        if platform.system() == "Windows":
+            os.startfile(path)
+        elif platform.system() == "Darwin":
+            subprocess.Popen(["open", path])
+        else:
+            subprocess.Popen(["xdg-open", path])
+        print(f"\nOpened folder: {path}")
+    except Exception as e:
+        print(f"\nFailed to open folder: {e}")
 
 def login():
     print("Launching browser for login...")
@@ -430,9 +448,10 @@ def interactive_menu():
         print("2. Download Full Profile")
         print("3. Settings")
         print("4. Login (Generate Session)")
-        print("5. Exit")
+        print("5. Open Downloads Folder")
+        print("6. Exit")
         
-        choice = input("Select an option (1-5): ").strip()
+        choice = input("Select an option (1-6): ").strip()
         
         if choice == '1':
             url = input("Enter Post/Reel URL: ").strip()
@@ -456,6 +475,8 @@ def interactive_menu():
         elif choice == '4':
             login()
         elif choice == '5':
+            open_folder(config['download_directory'])
+        elif choice == '6':
             break
         else:
             print("Invalid choice. Try again.")
