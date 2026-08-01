@@ -45,7 +45,13 @@ An interactive terminal menu will appear:
 **Step 1:** Select `4` to securely log in to your Instagram account via an automated browser window. This generates a safe, reusable session cookie locally.  
 **Step 2:** Select `1` or `2` to start downloading media!
 
-*Note for Termux (Android) users: Because Selenium requires a physical browser, you will need to install `termux-x11` or use a Proot environment to fulfill the Chrome dependency.*
+### 📱 Special Instructions for Termux (Android) Users
+Because Termux cannot open a native browser window for the automated login step, you must manually provide your session cookies:
+1. Download **Kiwi Browser** from the Play Store (it supports desktop extensions on Android).
+2. Install a cookie exporter extension (e.g., "EditThisCookie" or "Get cookies.txt LOCALLY").
+3. Log into Instagram inside Kiwi Browser, and use the extension to export your cookies in JSON format.
+4. Save the exported text into a file named exactly `ig_cookies.json` in the same directory as this script.
+5. The script will automatically detect your session—you can now directly select **Option 1 or 2** to start downloading!
 
 ## License
 
