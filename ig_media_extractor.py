@@ -279,7 +279,7 @@ def extract_post_media(driver, url, target_dir, shortcode):
                 next_btn = driver.find_element(By.CSS_SELECTOR, "button[aria-label='Next']")
             except:
                 next_btn = driver.find_element(By.CSS_SELECTOR, "button._afxw")
-            next_btn.click()
+            driver.execute_script("arguments[0].click();", next_btn)
             time.sleep(1)
             extract_current_images()
         except:
