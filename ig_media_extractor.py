@@ -138,12 +138,31 @@ def get_authenticated_driver():
         with open("ig_user_agent.txt", "r") as f:
             options.add_argument(f"user-agent={f.read().strip()}")
             
+    service = None
+    if "com.termux" in os.environ.get("PREFIX", ""):
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        
+        from selenium.webdriver.chrome.service import Service
+        termux_bin = "/data/data/com.termux/files/usr/bin"
+        if os.path.exists(f"{termux_bin}/chromium-browser"):
+            options.binary_location = f"{termux_bin}/chromium-browser"
+        elif os.path.exists(f"{termux_bin}/chromium"):
+            options.binary_location = f"{termux_bin}/chromium"
+            
+        if os.path.exists(f"{termux_bin}/chromedriver"):
+            service = Service(f"{termux_bin}/chromedriver")
+            
     try:
-        driver = webdriver.Chrome(options=options)
+        if service:
+            driver = webdriver.Chrome(service=service, options=options)
+        else:
+            driver = webdriver.Chrome(options=options)
     except Exception as e:
         print(f"\n[!] Error launching Chrome: {e}")
         print("Please ensure you have Google Chrome installed on your system.")
         print("If you are using Termux (Android), running full Selenium requires a proot environment or termux-x11.")
+        print("Run: pkg install x11-repo && pkg install chromium")
         sys.exit(1)
     
     # Must visit domain before injecting cookies
