@@ -222,10 +222,16 @@ def extract_post_media(driver, url, target_dir, shortcode):
     
     # Check for video via yt-dlp first
     cookie_file = convert_cookies_for_ytdlp()
+    class SilentLogger(object):
+        def debug(self, msg): pass
+        def warning(self, msg): pass
+        def error(self, msg): pass
+
     ydl_opts = {
         'outtmpl': os.path.join(target_dir, f'{shortcode}_%(id)s.%(ext)s'),
         'quiet': True,
         'no_warnings': True,
+        'logger': SilentLogger(),
     }
     if cookie_file:
         ydl_opts['cookiefile'] = cookie_file
