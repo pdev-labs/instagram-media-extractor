@@ -360,6 +360,11 @@ def download_profile(username, config):
         t.start()
         
         post_urls = set()
+        
+        # Check for active stories
+        print("Queueing active stories for extraction...")
+        post_urls.add(f"https://www.instagram.com/stories/{username}/")
+        
         no_new_posts = 0
         while not stop_scrolling:
             links = driver.find_elements(By.TAG_NAME, 'a')
@@ -385,12 +390,14 @@ def download_profile(username, config):
         if stop_scrolling:
             print(f"\nScrolling manually stopped by user! Extracting {len(post_urls)} collected posts...\n")
             
-        print(f"Found {len(post_urls)} total posts/highlights. Extracting media...")
+        print(f"Found {len(post_urls)} total posts/highlights/stories. Extracting media...")
         for url in post_urls:
             try:
                 parts = [p for p in urlparse(url).path.split('/') if p]
                 if 'highlights' in parts:
                     shortcode = f"highlight_{parts[-1]}"
+                elif 'stories' in parts:
+                    shortcode = f"story_{parts[1]}"
                 else:
                     shortcode = parts[1]
             except:
