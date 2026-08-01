@@ -75,25 +75,38 @@ def save_config(config):
 
 def reorganize_downloads(target_dir, date_folder_name):
     for root, dirs, files in os.walk(target_dir, topdown=False):
-        for file in files:
-            parent_dir = os.path.basename(root)
-            if parent_dir in ['image', 'video', 'dp', 'metadata', 'other']:
-                continue
+        if date_folder_name in root:
+            continue
             
+        for file in files:
             file_path = os.path.join(root, file)
             ext = os.path.splitext(file)[1].lower()
+            
             if 'profile_pic' in file:
-                media_type = 'dp'
-            elif ext in ['.jpg', '.jpeg', '.png', '.webp']:
-                media_type = 'image'
-            elif ext in ['.mp4', '.mov']:
-                media_type = 'video'
-            elif ext in ['.txt', '.json', '.xz']:
-                media_type = 'metadata'
+                category = 'dp'
+                media_type = ''
+            elif file.startswith('story_'):
+                category = 'stories'
+            elif file.startswith('highlight_'):
+                category = 'highlights'
             else:
-                media_type = 'other'
+                category = 'posts'
                 
-            dest_dir = os.path.join(root, date_folder_name, media_type)
+            if 'profile_pic' not in file:
+                if ext in ['.jpg', '.jpeg', '.png', '.webp']:
+                    media_type = 'image'
+                elif ext in ['.mp4', '.mov']:
+                    media_type = 'video'
+                elif ext in ['.txt', '.json', '.xz']:
+                    media_type = 'metadata'
+                else:
+                    media_type = 'other'
+                    
+            if media_type:
+                dest_dir = os.path.join(root, date_folder_name, category, media_type)
+            else:
+                dest_dir = os.path.join(root, date_folder_name, category)
+                
             os.makedirs(dest_dir, exist_ok=True)
             shutil.move(file_path, os.path.join(dest_dir, file))
 
