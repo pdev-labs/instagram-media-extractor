@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+ig_cookies.json
+ig_user_agent.txt
+.DS_Store
