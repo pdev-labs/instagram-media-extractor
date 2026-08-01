@@ -436,9 +436,15 @@ def interactive_menu():
         
         if choice == '1':
             url = input("Enter Post/Reel URL: ").strip()
+            if not url or not url.startswith('http'):
+                print("Invalid URL. Please enter a valid HTTP/HTTPS link.")
+                continue
             download_post(url, config)
         elif choice == '2':
             username = input("Enter Instagram Username: ").strip()
+            if not username:
+                print("Username cannot be empty.")
+                continue
             download_profile(username, config)
         elif choice == '3':
             print(f"Current Download Directory: {config['download_directory']}")
