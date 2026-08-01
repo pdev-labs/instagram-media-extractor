@@ -241,28 +241,47 @@ def extract_post_media(driver, url, target_dir, shortcode):
         pass # Not a video or yt-dlp failed, fallback to image scraping
 
     # Scrape images
-    imgs = driver.find_elements(By.TAG_NAME, 'img')
-    img_urls = []
-    for img in imgs:
-        src = img.get_attribute('src')
-        if not src:
-            continue
-            
-        # Ignore explicit profile pictures and tiny resolutions (avatars)
-        if 'profile_pic' in src:
-            continue
-            
-        is_small_avatar = any(sz in src for sz in ['s150x150', 's200x200', 's206x206', 's320x320', 's480x480'])
-        if is_small_avatar:
-            continue
-            
-        # Main images usually contain stp= or are standard .jpg/.webp
-        if 'stp=' in src or '.jpg' in src or '.webp' in src:
-            img_urls.append(src)
+    img_urls = set()
+    
+    def extract_current_images():
+        imgs = driver.find_elements(By.TAG_NAME, 'img')
+        for img in imgs:
+            src = img.get_attribute('src')
+            if not src:
+                continue
+                
+            # Ignore explicit profile pictures and tiny resolutions (avatars)
+            if 'profile_pic' in src:
+                continue
+                
+            is_small_avatar = any(sz in src for sz in ['s150x150', 's200x200', 's206x206', 's320x320', 's480x480'])
+            if is_small_avatar:
+                continue
+                
+            # Main images usually contain stp= or are standard .jpg/.webp
+            if 'stp=' in src or '.jpg' in src or '.webp' in src:
+                img_urls.add(src)
+
+    # Initial extraction
+    extract_current_images()
+    
+    # Click Next button for carousels to load remaining images into DOM
+    while True:
+        try:
+            try:
+                next_btn = driver.find_element(By.CSS_SELECTOR, "button[aria-label='Next']")
+            except:
+                next_btn = driver.find_element(By.CSS_SELECTOR, "button._afxw")
+            next_btn.click()
+            time.sleep(1)
+            extract_current_images()
+        except:
+            break
                 
     if img_urls:
-        print(f"Found {len(set(img_urls))} unique high-res image(s), downloading...")
-        for i, img_url in enumerate(list(set(img_urls))):
+        img_urls_list = list(img_urls)
+        print(f"Found {len(img_urls_list)} unique high-res image(s), downloading...")
+        for i, img_url in enumerate(img_urls_list):
             output_path = os.path.join(target_dir, f"{shortcode}_{i}.jpg")
             download_image(img_url, output_path)
     else:
