@@ -308,7 +308,19 @@ def download_post(url, config):
     finally:
         driver.quit()
 
+stop_scrolling = False
+
+def check_for_stop():
+    global stop_scrolling
+    try:
+        input()
+        input()
+        stop_scrolling = True
+    except:
+        pass
+
 def download_profile(username, config):
+    global stop_scrolling
     current_time_str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     target_dir = os.path.join(config["download_directory"], username)
     os.makedirs(target_dir, exist_ok=True)
@@ -333,9 +345,16 @@ def download_profile(username, config):
             pass
 
         print("Scrolling profile to collect posts (this bypasses 429 API blocks!)...")
+        print("\n*** PRESS [ENTER] TWICE TO STOP SCROLLING EARLY AND BEGIN DOWNLOADING ***\n")
+        
+        stop_scrolling = False
+        import threading
+        t = threading.Thread(target=check_for_stop, daemon=True)
+        t.start()
+        
         post_urls = set()
         no_new_posts = 0
-        while True:
+        while not stop_scrolling:
             links = driver.find_elements(By.TAG_NAME, 'a')
             current_count = len(post_urls)
             for link in links:
@@ -350,11 +369,14 @@ def download_profile(username, config):
                 no_new_posts = 0
                 
             if no_new_posts >= 3:
-                print("Finished scrolling profile.")
+                print("Finished scrolling profile (no new posts found).")
                 break
                 
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(3)
+            
+        if stop_scrolling:
+            print(f"\nScrolling manually stopped by user! Extracting {len(post_urls)} collected posts...\n")
             
         print(f"Found {len(post_urls)} total posts. Extracting media...")
         for url in post_urls:
