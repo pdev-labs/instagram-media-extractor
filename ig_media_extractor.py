@@ -239,12 +239,13 @@ def extract_post_media(driver, url, target_dir, shortcode):
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
-            if info and info.get('ext') in ['mp4', 'webm']:
-                print("Found video, downloading...")
+            if info and info.get('ext') in ['mp4', 'webm', 'm4a', 'none']:
+                print("Found video/audio stream, downloading...")
                 ydl.download([url])
-                return
-    except Exception:
-        pass # Not a video or yt-dlp failed, fallback to image scraping
+    except Exception as e:
+        pass # yt-dlp failed or not a video
+
+    # Always scrape images (handles mixed carousels and photo highlights where yt-dlp only grabbed videos)
 
     # Scrape images
     img_urls = set()
@@ -384,10 +385,14 @@ def download_profile(username, config):
         if stop_scrolling:
             print(f"\nScrolling manually stopped by user! Extracting {len(post_urls)} collected posts...\n")
             
-        print(f"Found {len(post_urls)} total posts. Extracting media...")
+        print(f"Found {len(post_urls)} total posts/highlights. Extracting media...")
         for url in post_urls:
             try:
-                shortcode = [p for p in urlparse(url).path.split('/') if p][1]
+                parts = [p for p in urlparse(url).path.split('/') if p]
+                if 'highlights' in parts:
+                    shortcode = f"highlight_{parts[-1]}"
+                else:
+                    shortcode = parts[1]
             except:
                 shortcode = "unknown"
             extract_post_media(driver, url, target_dir, shortcode)
